@@ -34,7 +34,7 @@ bool gerenciador_memoria(Processo* p, Memoria* m){
 // Itera pelos blocos de memória procurando a primeira sequência de blocos igual a quantidade exigida pelo processo
 int first_fit(int bloco_inicial, int bloco_final, int tamanho_processo, Memoria* m){
     int blocos_livres = 0;  // sequência de blocos que irá armazenar o processo
-    int inicio_segmento = bloco_inicial;
+    int inicio_segmento;
 
     for(int i = bloco_inicial; i < bloco_final; i++){
         if(m->blocos[i].ocupado == 0) {
