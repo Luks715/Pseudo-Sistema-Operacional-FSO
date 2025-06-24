@@ -218,7 +218,7 @@ int dispatcher(Memoria* memoria, Disco* disco, Fila* fila_global){
         fila_global->processos[p_idx++] = p;
 
         // Chamar o Gerenciador de Memória para alocar o processo na RAM
-        p.offset_mem = alocar_processo(p); // A função alocar processo ainda não foi feita
+        gerenciador_memoria(p, memoria);
 
         // Realiza o Output do processo
         imprimir_info_processo(&p);
