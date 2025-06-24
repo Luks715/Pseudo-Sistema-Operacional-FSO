@@ -2,7 +2,7 @@
 #include "include/memoria.h"
 #include <stdbool.h>
 
-int gerenciador_memoria(Processo* p, Memoria* m){
+bool gerenciador_memoria(Processo* p, Memoria* m){
     int bloco_inicial;
     int bloco_final;
     int tamanho_processo = p->blocos_mem;
