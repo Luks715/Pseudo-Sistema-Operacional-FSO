@@ -11,6 +11,7 @@ typedef struct {
     Diretorio diretorio;     
     Operacao operacoes[TAM_DISCO];  // Armazena todas as operações que os processos devem realizar
 
+    // Ponteiro para a função que realiza as funções create e delete
     int (*sistema_arquivos)(int, const char*, int, struct Disco*, struct Processo*);
 } Disco;
 
