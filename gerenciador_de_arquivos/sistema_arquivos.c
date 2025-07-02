@@ -39,7 +39,7 @@ void criar_arquivo(int endereco_inicial, const char* nome_arquivo, int tamanho, 
 
 Arquivo* buscar_arquivo(const char* nome_arquivo, Disco* disco){
     for(int i = 0; i < disco->diretorio.total_arquivos; i++){
-        if(disco->diretorio.arquivos[i].nome == nome_arquivo){
+        if(strcmp(disco->diretorio.arquivos[i].nome, nome_arquivo) == 0){
             // retorna o pID do arquivo, se for encontrado
             return &(disco->diretorio.arquivos[i]);
         }
