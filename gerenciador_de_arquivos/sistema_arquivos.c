@@ -31,11 +31,13 @@ int first_fit(int tamanho, Disco* disco){
     return -1;
 }
 
-int criar_arquivo(int endereco_disco, char nome_arquivo, int tamanho_bloco, Disco* disco){
-
+void criar_arquivo(int endereco_inicial, const char* nome_arquivo, int tamanho, Disco* disco){
+    for(int i = 0; i < tamanho; i++){
+        disco->blocos[endereco_inicial + i] = nome_arquivo;
+    }
 }
 
-Arquivo* buscar_arquivo(char nome_arquivo, Disco* disco){
+Arquivo* buscar_arquivo(const char* nome_arquivo, Disco* disco){
     for(int i = 0; i < disco->diretorio.total_arquivos; i++){
         if(disco->diretorio.arquivos[i].nome == nome_arquivo){
             // retorna o pID do arquivo, se for encontrado
@@ -47,20 +49,24 @@ Arquivo* buscar_arquivo(char nome_arquivo, Disco* disco){
     return NULL;
 }
 
-void deletar_arquivo(const char* nome, Disco* disco){
-    for(int i = 0; i < disco->total_blocos)
+void deletar_arquivo(Arquivo* arquivo, Disco* disco){
+    int endereco_inicial = arquivo->bloco_inicial;
+    int tamanho = arquivo->tamanho;
 
+    for(int i = 0; i < tamanho; i++){
+        disco->blocos[endereco_inicial + i] = 0;
+    }
 }
 
-int sistema_arquivos(int ID_processo, int operacao, char nome_arquivo, int tamanho_bloco, Disco* disco){
-    // Busca se já existe um arquivo com esse nome, -1: não existe, >=0: existe
-    int pID_arquivo = buscar_arquivo(nome_arquivo, disco);
+int sistema_arquivos(int operacao, const char* nome_arquivo, int tamanho_bloco, Disco* disco, Processo* processo){
+    // Busca se já existe um arquivo com esse nome, retorna um ponteiro para o arquivo se sim, NULL para não
+    Arquivo* arquivo_buscado = buscar_arquivo(nome_arquivo, disco);
 
     switch(operacao){
         case 0:
-            // Se não existe um arquivo com esse nome, dá segmento ao processo de criação
-            if(pID_arquivo == -1){
-                // Procura no disco se há espaço disponível
+            // Se não existe um arquivo com esse nome, dá contiuação ao processo de criação
+            if(arquivo_buscado == NULL){
+                // Procura no disco se há espaço disponível para criar o arquivo
                 int endereco_disco = first_fit(tamanho_bloco, disco);
 
                 if(endereco_disco > -1){
@@ -75,20 +81,27 @@ int sistema_arquivos(int ID_processo, int operacao, char nome_arquivo, int taman
                 return -2;
             }
 
-
             break;
         case 1:
-            // Verifica se o processo pode deletar esse arquivo (tempo real ou o criador do arquivo)
-            if(pID_arquivo == ID_processo || buscar_processo(ID_processo).prioridade == 0){
-                deletar_arquivo(nome_arquivo, disco);
-                return 1;
+            // Se o arquivo existe, dá contiação ao processo de destruição
+            if(arquivo_buscado != NULL){
+                // Verifica se o processo pode deletar esse arquivo (tempo real ou o criador do arquivo)
+                if(processo->prioridade == 0 || processo->pid == arquivo_buscado->pid_dono){
+                    deletar_arquivo(arquivo_buscado, disco);
+                    return 2;
+                } else {
+                    // Esse processo não pode deletar esse arquivo
+                    return -3;
+                }
             } else {
-                // Esse processo não pode deletar esse arquivo
-                return -3;
+                // Nenhum arquivo com o nome desejado foi encontrado
+                return -4;
             }
+
             break;
-
         default:
-
+            // Operação não suportada pelo Sistema de Arquivos
+            return -5;
+            break;
     }   
 }
