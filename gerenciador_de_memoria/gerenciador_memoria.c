@@ -10,16 +10,17 @@ bool gerenciador_memoria(Processo* p, Memoria* m){
     // Com base na prioridade do Processo, define o range de onde ele pode ser armazenado na memória
     if(p->prioridade == 0){ 
         bloco_inicial = 0;
-        bloco_final = 64;
+        bloco_final = 63;
     } else {
         bloco_inicial = 64;
-        bloco_final = 1024;
+        bloco_final = 1023;
     }
 
     int endereco_segmento = first_fit(bloco_inicial, bloco_final, tamanho_processo, m);
 
     if(endereco_segmento != -1) {
-        for(int i = 0; i < tamanho_processo; i++){
+        // Altera os blocos na memória onde o processo está alocado para 1
+        for(int i = 0; i <= tamanho_processo; i++){
             m->blocos[endereco_segmento + i].ocupado = 1;
             m->blocos[endereco_segmento + i].pid = p->pid;
         }
