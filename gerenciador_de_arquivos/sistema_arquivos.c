@@ -1,9 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "disco.h"
 #include "arquivo.h"
-#include "processo.h"
+#include "sistema_arquivos.h"
 
 int first_fit(int tamanho, Disco* disco){
     // Variáveis para armazenar a quantidade de blocos livres e o endereço inicial
