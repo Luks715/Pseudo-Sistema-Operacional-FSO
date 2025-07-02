@@ -4,6 +4,6 @@
 #include "disco.h"
 #include "processo.h"
 
-bool alocador(Processo* p, Memoria* m);
+int alocador(Processo* p, Memoria* m);
 
 #endif

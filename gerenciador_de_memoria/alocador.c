@@ -1,8 +1,13 @@
-#include "include/processo.h"
-#include "include/memoria.h"
-#include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
 
-bool gerenciador_memoria(Processo* p, Memoria* m){
+#include "processo.h"
+#include "memoria.h"
+
+#include "alocador.h"
+
+// Função responsável por alocar memória para um processo
+int alocador(Processo* p, Memoria* m){
     int bloco_inicial;
     int bloco_final;
     int tamanho_processo = p->blocos_mem;
@@ -16,20 +21,20 @@ bool gerenciador_memoria(Processo* p, Memoria* m){
         bloco_final = 1023;
     }
 
-    int endereco_segmento = first_fit(bloco_inicial, bloco_final, tamanho_processo, m);
+    // Se há espaço para alocar o processo, retorna o endereço inicial do bloco, se não, retorna -1
+    int resultado_alocacao = first_fit(bloco_inicial, bloco_final, tamanho_processo, m);
 
-    if(endereco_segmento != -1) {
+    if(resultado_alocacao != -1) {
         // Altera os blocos na memória onde o processo está alocado para 1
         for(int i = 0; i <= tamanho_processo; i++){
-            m->blocos[endereco_segmento + i].ocupado = 1;
-            m->blocos[endereco_segmento + i].pid = p->pid;
+            m->blocos[resultado_alocacao + i].ocupado = 1;
+            m->blocos[resultado_alocacao + i].pid = p->pid;
         }
 
-        p->offset_mem = endereco_segmento;
-        return true;
+        p->offset_mem = resultado_alocacao;
     } 
 
-    return false;
+    return resultado_alocacao;
 }
 
 // Itera pelos blocos de memória procurando a primeira sequência de blocos igual a quantidade exigida pelo processo
