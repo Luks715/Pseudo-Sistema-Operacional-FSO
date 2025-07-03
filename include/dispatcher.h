@@ -6,6 +6,6 @@
 #include "fila.h"
 #include "kernel.h"
 
-void dispatcher(Memoria* memoria, Disco* disco, Fila* fila_global, Kernel* kernel);
+void dispatcher(Memoria* memoria, Disco* disco, Fila* filas[], Kernel* kernel);
 
 #endif
