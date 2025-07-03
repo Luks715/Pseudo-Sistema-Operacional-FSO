@@ -9,4 +9,8 @@ typedef struct{
     Processo processos[max_processos];
 } Fila;
 
+// Funções
+int append(Fila* fila, Processo p);
+int pop(Fila* fila, Processo* p);
+
 #endif
