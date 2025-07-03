@@ -1,7 +1,7 @@
 #ifndef ALOCADOR_H
 #define ALOCADOR_H
 
-#include "disco.h"
+#include "memoria.h"
 #include "processo.h"
 
 int alocador(Processo* p, Memoria* m);
