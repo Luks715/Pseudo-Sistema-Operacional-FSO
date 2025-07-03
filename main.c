@@ -8,28 +8,43 @@
 #include "recursoES.h"
 #include "disco.h"
 #include "diretorio.h"
+#include "kernel.h"
+
+#include "dispatcher.h"
+#include "alocador.h"
+#include "sistema_arquivos.h"
+
+// Declaração do Kernel
+Kernel kernel;
 
 // Declaração de filas 
-Fila fila_global;
-Fila fila_tempo_real;
-Fila fila_usuario_1;
-Fila fila_usuario_2;
-Fila fila_usuario_3;
+Fila fila_global;       // Guarda todas as structs processos
+Fila fila_pronto;       // Guarda todos os processos que estão em memória
+Fila fila_tempo_real;   // Processos de prioridade 0
+Fila fila_usuario_1;    // Processos de prioridade 1
+Fila fila_usuario_2;    // Processos de prioridade 2
+Fila fila_usuario_3;    // Processos de prioridade 3
 
-// Memória RAM
-Memoria memoria_principal;
+// Memória principal
+Memoria RAM;
 
 // Diretório 
 Diretorio diretorio;
 
-// HD
-Disco disco;
+// Disco
+Disco HD;
 
 // Recursos de E/S
 Recurso impressoras[2];
 Recurso scanner;
 Recurso modem;
 Recurso discos[2];
+
+// Inicialização de Kernel
+void inicializar_kernel(){
+    kernel.alocador = alocador;
+    kernel.sistema_arquivos = sistema_arquivos;
+}
 
 // Inicialização de estruturas
 void inicializar_filas() {
@@ -41,21 +56,21 @@ void inicializar_filas() {
 
 void inicializar_memoria() {
     for (int i = 0; i < TOTAL_BLOCOS; i++) {
-        memoria_principal.blocos[i].ocupado = 0;
-        memoria_principal.blocos[i].pid = -1;
+        RAM.blocos[i].ocupado = 0;
+        RAM.blocos[i].pid = -1;
     }
 }
 
 void inicializar_disco() {
-    disco.total_blocos = TAM_DISCO;
+    HD.total_blocos = TAM_DISCO;
 
     // Inicializa blocos físicos
     for (int i = 0; i < TAM_DISCO; i++) {
-        disco.blocos[i] = '0';
+        HD.blocos[i] = '0';
     }
 
     // Inicializa o diretório dentro do disco
-    disco.diretorio.total_arquivos = 0;
+    HD.diretorio.total_arquivos = 0;
 }
 
 void inicializar_recursos() {
@@ -73,6 +88,7 @@ void inicializar_recursos() {
 int main(){
     printf("Inicializando o SO.\n");
 
+    inicializar_kernel();
     inicializar_filas();
     inicializar_memoria();
     inicializar_disco();
@@ -80,6 +96,6 @@ int main(){
 
     printf("Inicialização concluída. Iniciando dispatch.\n");
 
-    dispatcher(&memoria_principal, &disco, &fila_global); // dispatcher() vai usar as filas, memória, disco e recursos
+    dispatcher(&RAM, &HD, &fila_global, &kernel); // dispatcher() vai usar as filas, memória, disco e recursos
     return 0;
 }
