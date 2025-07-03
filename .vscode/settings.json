@@ -1,0 +1,11 @@
+{
+    "files.associations": {
+        "recursoes.h": "c",
+        "arquivo.h": "c",
+        "dispatcher.h": "c",
+        "operacao.h": "c",
+        "disco.h": "c",
+        "fila.h": "c",
+        "diretorio.h": "c"
+    }
+}

@@ -2,12 +2,13 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "fila.h"
-#include "memoria.h"
-#include "arquivo.h"
-#include "recursoES.h"
-#include "disco.h"
-#include "diretorio.h"
+#include "include\fila.h"
+#include "include\memoria.h"
+#include "include\arquivo.h"
+#include "include\recursoES.h"
+#include "include\disco.h"
+#include "include\diretorio.h"
+#include "include\dispatcher.h"
 
 // Declaração de filas 
 Fila fila_global;
@@ -58,28 +59,17 @@ void inicializar_disco() {
     disco.diretorio.total_arquivos = 0;
 }
 
-void inicializar_recursos() {
-    for (int i = 0; i < 2; i++) {
-        impressoras[i].ocupado = 0;
-        impressoras[i].pid = -1;
-        discos[i].ocupado = 0;
-        discos[i].pid = -1;
-    }
-    scanner.ocupado = modem.ocupado = 0;
-    scanner.pid = modem.pid = -1;
-}
-
-
 int main(){
     printf("Inicializando o SO.\n");
 
     inicializar_filas();
     inicializar_memoria();
     inicializar_disco();
-    inicializar_recursos();
+    inicializar_recursos(impressoras, &scanner, &modem, discos);
 
-    printf("Inicialização concluída. Iniciando dispatch.\n");
+    printf("Inicializacao concluida. Iniciando dispatch.\n\n");
 
-    dispatcher(&memoria_principal, &disco, &fila_global); // dispatcher() vai usar as filas, memória, disco e recursos
+    dispatcher(&memoria_principal, &disco, &fila_global,
+           impressoras, &scanner, &modem, discos); // dispatcher() vai usar as filas, memória, disco e recursos
     return 0;
 }
