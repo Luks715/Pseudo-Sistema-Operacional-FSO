@@ -9,9 +9,6 @@
 
 typedef struct {
     Bloco blocos[TOTAL_BLOCOS];
-
-    // Ponteiro para a função que aloca memória para processos na RAM
-    int (*alocador)(struct Processo*, struct Memoria* m);
 } Memoria;
 
 #endif
