@@ -25,6 +25,8 @@ Fila fila_usuario_1;    // Processos de prioridade 1
 Fila fila_usuario_2;    // Processos de prioridade 2
 Fila fila_usuario_3;    // Processos de prioridade 3
 
+Fila* filas[] = { &fila_tempo_real, &fila_usuario_1, &fila_usuario_2, &fila_usuario_3, &fila_global};
+
 // Memória principal
 Memoria RAM;
 
