@@ -6,7 +6,7 @@ extern Fila fila_tempo_real;
 extern Fila fila_usuario_1;
 
 // Múltiplas Filas com Realimentação.
-void despachar_processo(Processo p) {
+void despachar_processo(Processo p, Fila filas[]) {
     // Inicializa o contador de envelhecimento para o processo
     p.ciclos_na_fila = 0;
 

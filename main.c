@@ -3,24 +3,25 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "fila.h"
-#include "memoria.h"
-#include "arquivo.h"
-#include "recursoES.h"
-#include "disco.h"
-#include "diretorio.h"
-#include "kernel.h"
+#include "include\fila.h"
+#include "include\memoria.h"
+#include "include\arquivo.h"
+#include "include\recursoES.h"
+#include "include\disco.h"
+#include "include\diretorio.h"
+#include "include\kernel.h"
 
-#include "dispatcher.h"
-#include "alocador.h"
-#include "sistema_arquivos.h"
+#include "include\dispatcher.h"
+#include "gerenciador_de_memoria\alocador.h"
+#include "gerenciador_de_arquivos\sistema_arquivos.h"
 
-#include "gerenciador_processos.h"
-#include "escalonador.h"
-#include "semaforo.h" 
+#include "gerenciador_de_processos\gerenciador_processos.h"
+#include "gerenciador_de_processos\escalonador.h"
+#include "include\semaforo.h" 
 
 // Declaração do Kernel
 Kernel kernel;
+#include "include\dispatcher.h"
 
 // Declaração de filas
 Fila fila_global;      // Guarda todas as structs processos
@@ -87,18 +88,6 @@ void inicializar_disco() {
     HD.diretorio.total_arquivos = 0;
 }
 
-void inicializar_recursos() {
-    for (int i = 0; i < 2; i++) {
-        impressoras[i].ocupado = 0;
-        impressoras[i].pid = -1;
-        discos[i].ocupado = 0;
-        discos[i].pid = -1;
-    }
-    scanner.ocupado = modem.ocupado = 0;
-    scanner.pid = modem.pid = -1;
-}
-
-
 int main(){
     printf("Inicializando o SO.\n");
 
@@ -107,16 +96,12 @@ int main(){
     inicializar_gerenciador();
     inicializar_memoria();
     inicializar_disco();
-    inicializar_recursos();
+    inicializar_recursos(impressoras, &scanner, &modem, discos);
 
-    iniciar_semaforo(&sem_impressora, 2);
-    iniciar_semaforo(&sem_scanner, 1);
-    iniciar_semaforo(&sem_modem, 1);
-    iniciar_semaforo(&sem_disco, 2);
+    printf("Inicializacao concluida. Iniciando dispatch.\n\n");
 
-    printf("Inicialização concluída. Iniciando dispatch.\n");
-
-    dispatcher(&RAM, &HD, filas, &kernel); // dispatcher() vai usar as filas, memória, disco e recursos
+    dispatcher(&RAM, &HD, filas, &kernel,
+           impressoras, &scanner, &modem, discos); // dispatcher() vai usar as filas, memória, disco e recursos
 
     printf("Iniciando escalonador.\n");
     escalonar(); // executa os processos
