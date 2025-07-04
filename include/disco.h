@@ -7,7 +7,7 @@
 typedef struct {
     char blocos[TAM_DISCO];  // 0 = livre, Nome do arquivo = ocupado
     int total_blocos;        // Quantidade total de blocos (definido no arquivo files.txt)
-    Diretorio diretorio;
+    Diretorio diretorio;     
 } Disco;
 
 #endif

@@ -14,7 +14,9 @@ typedef struct {
     int modem;
     int codigo_disco;
     int offset_mem;
-    int tempo_chegada;
+    int ciclos_na_fila; // usado para aging
+    int tempo_executado; // usado pelo escalonador
+    int tempo_restante; // usado pelo escalonador
     bool executando;
 } Processo;
 
