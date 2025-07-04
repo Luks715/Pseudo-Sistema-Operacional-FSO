@@ -1,0 +1,22 @@
+{
+  "files.associations": {
+    "fila.h": "c",
+    "memoria.h": "c",
+    "arquivo.h": "c",
+    "disco.h": "c",
+    "diretorio.h": "c",
+    "dispatcher.h": "c",
+    "alocador.h": "c",
+    "semaforo.h": "c",
+    "sistema_arquivos.h": "c",
+    "kernel.h": "c",
+    "gerenciador_processos.h": "c",
+    "escalonador.h": "c",
+    "processo.h": "c",
+    "operacao.h": "c",
+    "stdlib.h": "c",
+    "stdio.h": "c",
+    "unistd.h": "c",
+    "recursoes.h": "c"
+  }
+}
