@@ -17,7 +17,6 @@ void inicializar_recursos(Recurso impressoras[2], Recurso* scanner, Recurso* mod
 
 // Implementação da alocação de recursos
 int alocar_recursos(Processo* p, Recurso impressoras[2], Recurso* scanner, Recurso* modem, Recurso discos[2]) {
-    // Processos de tempo real não precisam de recursos de E/S [cite: 56, 59]
     if (p->prioridade == 0) {
         return 1; // Sucesso imediato
     }
