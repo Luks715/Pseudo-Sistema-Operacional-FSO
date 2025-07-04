@@ -8,6 +8,7 @@
 #include "operacao.h"
 #include "kernel.h"
 #include "fila.h"
+#include "gerenciador_processos.h"
 
 #define MAX_LINHA 100  // define a quantidade máxima de caracteres na linha
 
@@ -118,33 +119,12 @@ void dispatcher(Memoria* memoria, Disco* disco, Fila* filas[], Kernel* kernel){
         // O sistema só deve oferecer suporte para 1000 processos nas filas
         if(p_idx < 999){
             // Chamar o Gerenciador de Memória para alocar o processo na RAM
-            int resultado_alocacao = kernel->alocador(&p, memoria);
+             int resultado_alocacao = kernel->alocador(&p, memoria);
 
-            if(resultado_alocacao != -1){
-                p_idx++;
-
-                // Realiza o Output do processo
+            if (resultado_alocacao != -1) {
                 imprimir_info_processo(&p);
-
-                // Adiciona o processo em sua Fila correspondente
-                switch(p.prioridade){
-                    case 0:
-                        append(filas[0], p);     // fila de tempo real
-                        break;
-
-                    case 1:
-                        append(filas[1], p);     // fila de usuario 1
-                        break;
-
-                    case 2:
-                        append(filas[2], p);     // fila de usuario 2
-                        break;      
-
-                    case 3:
-                        append(filas[3], p);     // fila de usuario 3
-                        break;
-                }
-
+                despachar_processo(p);
+                p_idx++;
             } else {
                 // Não é possível alocar o processo na memória pois já há 1000 processos prontos
                 // Adiciona o processo na Fila Global

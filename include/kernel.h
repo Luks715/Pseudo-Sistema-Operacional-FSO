@@ -2,8 +2,8 @@
 #define KERNEL_H
 
 #define TAM_OP 1000
-#include "operacao.h"
 
+#include "operacao.h"
 #include "disco.h"
 #include "processo.h"
 #include "memoria.h"
