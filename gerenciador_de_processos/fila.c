@@ -1,29 +1,41 @@
 #include "fila.h"
-#include <stddef.h>
 
-void inicializar_fila(Fila* fila) {
+int start_queue(Fila* fila) {
     fila->inicio = 0;
     fila->fim = 0;
+    return 0; 
 }
 
-int fila_vazia(Fila* fila) {
+int append(Fila* fila, Processo p) {
+    int proximo = (fila->fim + 1) % max_processos;
+
+    if (proximo == fila->inicio) {
+        return -1;  // fila cheia
+    }
+
+    fila->processos[fila->fim] = p;
+    fila->fim = proximo;
+    return 0;
+}
+
+int pop(Fila* fila, Processo* p) {
+    if (fila->inicio == fila->fim) {
+        return -1;  // fila vazia
+    }
+
+    *p = fila->processos[fila->inicio];
+    fila->inicio = (fila->inicio + 1) % max_processos;
+    return 0;
+}
+
+int queue_len(Fila* fila) {
+    return (fila->fim - fila->inicio + max_processos) % max_processos;
+}
+
+int queue_empty(Fila* fila) {
     return fila->inicio == fila->fim;
 }
 
-int fila_cheia(Fila* fila) {
-    return (fila->fim + 1) % 1000 == fila->inicio;
-}
-
-int enfileirar(Fila* fila, Processo* p) {
-    if (fila_cheia(fila)) return 0;
-    fila->processos[fila->fim] = p;
-    fila->fim = (fila->fim + 1) % 1000;
-    return 1;
-}
-
-Processo* desenfileirar(Fila* fila) {
-    if (fila_vazia(fila)) return NULL;
-    Processo* p = fila->processos[fila->inicio];
-    fila->inicio = (fila->inicio + 1) % 1000;
-    return p;
+int queue_full(Fila* fila) {
+    return ((fila->fim + 1) % max_processos) == fila->inicio;
 }

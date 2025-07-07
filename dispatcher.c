@@ -1,159 +1,139 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <ctype.h>
 
-#include "include\dispatcher.h"
-#include "include\arquivo.h"
-#include "include\processo.h"
-#include "include\operacao.h"
-#include "include\memoria.h"
-#include "include\disco.h"
-#include "include\recursoES.h"
+// É uma boa prática manter os includes de headers do seu próprio projeto juntos
+#include "include/dispatcher.h"
+#include "include/processo.h"
+#include "include/memoria.h"
+#include "include/disco.h"
+#include "include/recursoES.h"
+#include "include/fila.h"
+// Você precisará criar e implementar as funções deste módulo
+#include "gerenciador_de_processos/gerenciador_processos.h"
 
-#define MAX_LINHA 100
+#define MAX_PROCESSOS 1000
 
-void imprimir_info_processo(const Processo *p) {
-    printf("dispatcher => PID: %d | offset: %d | blocks: %d | priority: %d | time: %d | printers: %s | scanners: %s | modems: %s | drives: %s\n\n",
-           p->pid,
-           p->offset_mem,
-           p->blocos_mem,
-           p->prioridade,
-           p->tempo_de_processador,
-           (p->impressora > 0) ? "true" : "false",
-           (p->scanner == 1) ? "true" : "false",
-           (p->modem == 1) ? "true" : "false",
-           (p->codigo_disco > 0) ? "true" : "false"
-    );
-}
-
-int dispatcher(Memoria* memoria, Disco* disco, Fila* fila_global,
-               Recurso impressoras[2], Recurso* scanner, Recurso* modem, Recurso discos[2])
-{
-    FILE *arquivo;
-    char linha[MAX_LINHA];
-    char numero[20];
-    int num_idx = 0;
-
-    // Leitura e parsing do arquivo de sistema de arquivos (files.txt)
-    arquivo = fopen("files.txt", "r");
-    if (arquivo == NULL) {
-        perror("Erro ao abrir o arquivo files.txt");
-        return 1;
-    }
-
-    int counter = 0;
-    int segmentos;
-
-    while (fgets(linha, sizeof(linha), arquivo) != NULL) {
-        switch (counter) {
-            case 0: // Lê a quantidade total de blocos no disco
-                for (int i = 0; linha[i] != '\0'; i++) {
-                    if (isdigit(linha[i])) {
-                        numero[num_idx++] = linha[i];
-                    }
-                }
-                numero[num_idx] = '\0';
-                disco->total_blocos = atoi(numero);
-                num_idx = 0;
-                memset(numero, 0, sizeof(numero));
-                counter++;
-                break;
-
-            case 1: // Lê a quantidade de segmentos já ocupados
-                for (int i = 0; linha[i] != '\0'; i++) {
-                    if (isdigit(linha[i])) {
-                        numero[num_idx++] = linha[i];
-                    }
-                }
-                numero[num_idx] = '\0';
-                segmentos = atoi(numero);
-                num_idx = 0;
-                memset(numero, 0, sizeof(numero));
-                counter++;
-                break;
-            
-            case 2: // Lê os segmentos e preenche o mapa de disco
-                 // Este laço precisa ser ajustado para ler as N linhas de segmento
-                for (int i = 0; i < segmentos; i++) {
-                    // Lógica para ler cada linha de segmento de arquivo
-                }
-                // Lógica para ler as operações de arquivo restantes
-                counter++;
-                break;
-
-            default:
-                break;
-        }
-    }
-    fclose(arquivo);
-
-    // Leitura e parsing do arquivo de processos (processes.txt)
-    arquivo = fopen("processes.txt", "r");
+// Função auxiliar para carregar os processos do arquivo para uma lista
+int carregar_processos_para_lista(Processo lista_chegada[MAX_PROCESSOS]) {
+    FILE *arquivo = fopen("processes.txt", "r");
     if (arquivo == NULL) {
         perror("Erro ao abrir o arquivo processes.txt");
-        return 1;
+        return 0;
     }
 
-    int p_id = 0;
-    while (fgets(linha, sizeof(linha), arquivo) != NULL) {
-        int campo_processo = 0;
-        num_idx = 0;
-        memset(numero, 0, sizeof(numero));
-
-        Processo p = {0}; // Inicializa a struct com zeros
-        p.pid = p_id;
-
-        for (int i = 0; i <= strlen(linha); i++) {
-            if (isdigit(linha[i])) {
-                numero[num_idx++] = linha[i];
-            } else if (num_idx > 0) {
-                numero[num_idx] = '\0';
-                int valor = atoi(numero);
-                memset(numero, 0, sizeof(numero));
-                num_idx = 0;
-
-                switch (campo_processo) {
-                    case 0: p.tempo_inicializacao = valor; break;
-                    case 1: p.prioridade = valor; break;
-                    case 2: p.tempo_de_processador = valor; break;
-                    case 3: p.blocos_mem = valor; break;
-                    case 4: p.impressora = valor; break;
-                    case 5: p.scanner = valor; break;
-                    case 6: p.modem = valor; break;
-                    case 7: p.codigo_disco = valor; break;
-                }
-                campo_processo++;
-            }
-        }
-
-        // --- LÓGICA DE GERENCIAMENTO DE RECURSOS ---
+    char linha[100];
+    int total_processos = 0;
+    while (fgets(linha, sizeof(linha), arquivo) != NULL && total_processos < MAX_PROCESSOS) {
+        Processo p = {0}; // Inicializa o processo com zeros
+        p.pid = total_processos;
         
-        // 1. Tenta alocar os recursos para o processo
-        if (alocar_recursos(&p, impressoras, scanner, modem, discos)) {
-
-            imprimir_info_processo(&p);
-
-            // SIMULAÇÃO DA EXECUÇÃO DO PROCESSO
-            printf("process %d =>\n", p.pid);
-            printf("\tP%d STARTED\n", p.pid);
-            for (int i = 1; i <= p.tempo_de_processador; i++) {
-                printf("\tP%d instruction %d\n", p.pid, i);
-            }
-            printf("\tP%d return SIGINT\n\n", p.pid);
-
-            // 2. Libera os recursos DEPOIS que o processo termina
-            liberar_recursos(&p, impressoras, scanner, modem, discos);
-
-        } else {
-            // FALHA na alocação. O processo é descartado.
-            printf("dispatcher => Processo %d foi descartado por falta de recursos.\n\n", p.pid);
-        }
+        // Usando strtok que é mais conciso, como em partes do seu código
+        p.tempo_inicializacao = atoi(strtok(linha, ", "));
+        p.prioridade = atoi(strtok(NULL, ", "));
+        p.tempo_de_processador = atoi(strtok(NULL, ", "));
+        p.blocos_mem = atoi(strtok(NULL, ", "));
+        p.impressora = atoi(strtok(NULL, ", "));
+        p.scanner = atoi(strtok(NULL, ", "));
+        p.modem = atoi(strtok(NULL, ", "));
+        p.codigo_disco = atoi(strtok(NULL, ", "));
         
-        p_id++;
+        // Inicializa outros campos importantes
+        p.offset_mem = -1; // -1 significa que ainda não está na memória
+        p.tempo_restante = p.tempo_de_processador;
+
+        lista_chegada[total_processos++] = p;
     }
 
     fclose(arquivo);
+    return total_processos;
+}
 
-    return 0;
+
+// O dispatcher agora se torna o loop principal do Kernel/SO
+void dispatcher_main_loop(Memoria* memoria, Disco* disco, Fila filas[],
+                          Recurso impressoras[], Recurso* scanner, Recurso* modem, Recurso discos[]) {
+    
+    // --- FASE 1: INICIALIZAÇÃO E CARGA ---
+    
+    Processo lista_de_chegada[MAX_PROCESSOS];
+    int total_processos = carregar_processos_para_lista(lista_de_chegada);
+    int processos_admitidos = 0;
+
+    int tempo_atual = 0;
+    Processo* processo_na_cpu = NULL;
+
+    printf("--- SIMULAÇÃO DO PSEUDO-SO INICIADA ---\n\n");
+
+    // --- FASE 2: LOOP PRINCIPAL DE SIMULAÇÃO (O RELÓGIO DO SISTEMA) ---
+    while (true) {
+        // 1. ADMISSÃO DE NOVOS PROCESSOS
+        // Verifica se algum processo da lista de chegada deve entrar no sistema neste instante de tempo
+        for (int i = 0; i < total_processos; i++) {
+            if (lista_de_chegada[i].tempo_inicializacao == tempo_atual) {
+                printf("Tempo %d: Processo %d chegou ao sistema.\n", tempo_atual, lista_de_chegada[i].pid);
+                // Tenta alocar memória para o novo processo
+                lista_de_chegada[i].offset_mem = alocar_memoria(&lista_de_chegada[i], memoria);
+                
+                if (lista_de_chegada[i].offset_mem != -1) {
+                    // Se conseguiu memória, o processo é admitido e vai para a fila de prontos
+                    printf("Processo %d alocou memoria com sucesso (offset: %d).\n", lista_de_chegada[i].pid, lista_de_chegada[i].offset_mem);
+                    despachar_processo(&lista_de_chegada[i], filas); // Função que coloca o processo na fila correta (TR ou User)
+                    processos_admitidos++;
+                } else {
+                    // Se não conseguiu memória, você pode tentar de novo no próximo ciclo ou descartar.
+                    // Por enquanto, vamos apenas avisar.
+                    printf("Falha de memoria para o processo %d. Tentando novamente no proximo ciclo.\n", lista_de_chegada[i].pid);
+                    lista_de_chegada[i].tempo_inicializacao++; // Tenta de novo no próximo "segundo"
+                }
+            }
+        }
+
+        // 2. ESCALONAMENTO
+        // Se a CPU está livre, o escalonador escolhe o próximo processo
+        if (processo_na_cpu == NULL) {
+            processo_na_cpu = escalonar_proximo_processo(filas);
+            if (processo_na_cpu != NULL) {
+                // Se um processo foi escolhido, agora tentamos alocar os recursos de E/S para ele
+                if (!alocar_recursos(processo_na_cpu, impressoras, scanner, modem, discos)) {
+                    printf("Processo %d nao conseguiu alocar E/S, voltando para a fila de prontos.\n", processo_na_cpu->pid);
+                    // O processo volta para a fila e a CPU fica ociosa neste ciclo
+                    despachar_processo(processo_na_cpu, filas); // Devolve para a fila
+                    processo_na_cpu = NULL; 
+                } else {
+                     printf("Tempo %d: Processo %d INICIOU EXECUCAO.\n", tempo_atual, processo_na_cpu->pid);
+                     imprimir_info_processo(processo_na_cpu);
+                }
+            }
+        }
+        
+        // 3. EXECUÇÃO
+        if (processo_na_cpu != NULL) {
+            processo_na_cpu->tempo_restante--;
+            
+            // 4. VERIFICAÇÃO DE TÉRMINO OU PREEMPÇÃO
+            if (processo_na_cpu->tempo_restante <= 0) {
+                // Processo terminou
+                printf("Tempo %d: Processo %d TERMINOU.\n", tempo_atual, processo_na_cpu->pid);
+                liberar_memoria(processo_na_cpu, memoria);
+                liberar_recursos(processo_na_cpu, impressoras, scanner, modem, discos);
+                processo_na_cpu = NULL; // CPU fica livre
+            } 
+            // Adicionar lógica de preempção por quantum e aging aqui
+        } else {
+            printf("Tempo %d: CPU OCIOSA.\n", tempo_atual);
+        }
+
+        // CRITÉRIO DE PARADA: se todos os processos foram admitidos e terminaram
+        // (Esta lógica precisa ser melhorada para contar os processos terminados)
+        if (processos_admitidos == total_processos && todas_as_filas_estao_vazias() && processo_na_cpu == NULL) {
+            printf("\n--- TODOS OS PROCESSOS FORAM CONCLUIDOS ---\n");
+            break;
+        }
+
+        tempo_atual++;
+        // Sleep(100); // Para visualizar a simulação passo a passo
+    }
+
+    // Lógica para executar as operações de arquivo pode vir aqui no final
 }
