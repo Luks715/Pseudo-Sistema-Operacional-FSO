@@ -4,6 +4,6 @@
 #include "fila.h"
 #include "processo.h"
 
-void despachar_processo(Processo* processo, Fila filas[]);
+void despachar_processo(Processo p);
 
 #endif
