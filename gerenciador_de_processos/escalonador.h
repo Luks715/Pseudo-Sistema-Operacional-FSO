@@ -1,8 +1,8 @@
 #ifndef ESCALONADOR_H
 #define ESCALONADOR_H
 
-#include "processo.h"
-#include "fila.h"
+#include "../include/processo.h"
+#include "../include/fila.h"
 
 
 void escalonar();

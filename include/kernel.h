@@ -10,6 +10,7 @@
 
 typedef struct{
     Operacao operacoes[TAM_OP];  // Armazena todas as operações que os processos devem realizar
+    int num_operacoes;           // Quantidade de operações que o sistema deve realizar
 
     // Ponteiro para a função que realiza as funções create e delete de arquivos
     int (*sistema_arquivos)(int, const char*, int, Disco*, Processo*);

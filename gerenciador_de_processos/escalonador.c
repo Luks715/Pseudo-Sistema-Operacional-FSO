@@ -1,10 +1,14 @@
 #include <stdio.h>
 #include <unistd.h>
+//#include <time.h>
+
 #include "escalonador.h"
-#include "fila.h"
-#include "processo.h"
-// #include "semaforo.h"       // Descomente quando for usar
-// #include "recursoES.h"      // Descomente quando for usar
+#include "../include/fila.h"
+#include "../include/processo.h"
+#include "../include/semaforo.h"      
+#include "../include/recursoES.h"
+#include "../gerenciador_de_ES/gerenciador_es.h" 
+
 
 extern Fila fila_tempo_real;
 extern Fila fila_usuario_1;
@@ -46,19 +50,18 @@ void aging(Fila* fila, Fila* fila_superior) {
 
 
 void executar_processo(Processo* p) {
-    // Simula a execução do processo por 1 quantum de 1ms
     printf("Executando P%d (Prioridade: %d, Tempo Restante: %d)\n", p->pid, p->prioridade, p->tempo_de_processador);
-    usleep(1000); // Simula 1ms de trabalho
+    usleep(1000); 
     p->tempo_de_processador--;
 
     if (p->tempo_de_processador <= 0) {
         printf("P%d finalizado. return SIGINT\n", p->pid);
-        // liberar_recursos(p); // Função para liberar memória e recursos de E/S
+        
+        liberar_recursos(p);
     }
 }
-
 void rebaixar_processo(Processo* p) {
-    printf("Processo %d não terminou. Rebaixando prioridade.\n", p->pid);
+    printf("Processo %d nao terminou. Rebaixando prioridade.\n", p->pid);
     p->ciclos_na_fila = 0; // Reseta o contador ao mudar de fila
 
     if (p->prioridade == 1) {
@@ -98,13 +101,14 @@ void escalonar() {
         if (!queue_empty(&fila_tempo_real)) {
             pop(&fila_tempo_real, &p_atual);
             
-            printf("Executando processo de TEMPO REAL P%d até o fim.\n", p_atual.pid);
+            printf("Executando processo de TEMPO REAL P%d ate o fim.\n", p_atual.pid);
             while (p_atual.tempo_de_processador > 0) {
                 usleep(1000); // Simula 1ms de trabalho
                 p_atual.tempo_de_processador--;
             }
             printf("P%d finalizado. return SIGINT\n", p_atual.pid);
-            // liberar_recursos(&p_atual);
+            
+            liberar_recursos(&p_atual);
             continue; // Volta ao início do loop para re-avaliar as filas
         }
 
@@ -124,5 +128,5 @@ void escalonar() {
             continue;
         }
     }
-    printf("\nTodas as filas de processos estão vazias. Escalonador encerrado.\n");
+    printf("\nTodas as filas de processos estao vazias. Escalonador encerrado.\n");
 }

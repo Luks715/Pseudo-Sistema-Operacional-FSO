@@ -1,8 +1,8 @@
 #ifndef ALOCADOR_H
 #define ALOCADOR_H
 
-#include "memoria.h"
-#include "processo.h"
+#include "../include/memoria.h"
+#include "../include/processo.h"
 
 int alocador(Processo* p, Memoria* m);
 

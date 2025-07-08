@@ -1,140 +1,180 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h> 
 
-#include "dispatcher.h"
-#include "arquivo.h"
-#include "processo.h"
-#include "operacao.h"
-#include "kernel.h"
-#include "fila.h"
-#include "gerenciador_processos.h"
+#include "include/dispatcher.h"
+#include "include/processo.h"
+#include "include/fila.h"
+#include "gerenciador_de_processos/gerenciador_processos.h"
+#include "gerenciador_de_memoria/alocador.h"
+#include "gerenciador_de_ES/gerenciador_es.h"
+#include "gerenciador_de_processos/escalonador.h"
+#include "include/kernel.h"
+#include "include/disco.h"
+#include "include/operacao.h"
+#include "include/semaforo.h"
 
-#define MAX_LINHA 100  // define a quantidade máxima de caracteres na linha
+extern Memoria RAM;
+extern Disco HD;
+extern Kernel kernel;
+extern Fila fila_global, fila_tempo_real, fila_usuario_1, fila_usuario_2, fila_usuario_3;
+extern Semaforo sem_impressora, sem_scanner, sem_modem, sem_disco_sata;
 
-void dispatcher(Memoria* memoria, Disco* disco, Fila* filas[], Kernel* kernel){
-    FILE *arquivo;
-    char linha[MAX_LINHA]; // pega os 100 primeiros caracteres, se as linhas forem maiores que isso, é possível modificar para pegar a linha até achar '\n'
+#define MAX_PROCESSOS_ARQUIVO 1000
+#define MAX_LINHA 256
 
-    // Abre o arquivo Files para leitura
-    arquivo = fopen("files.txt", "r");
-    if (arquivo == NULL){
-        perror("Erro ao abrir o arquivo");
-        return 1;
+// --- Funções Auxiliares ---
+
+void imprimir_info_processo(Processo* p) {
+    printf("dispatcher =>\n");
+    printf("    PID: %d\n", p->pid);
+    printf("    offset: %d\n", p->offset_mem);
+    printf("    blocks: %d\n", p->blocos_mem);
+    printf("    priority: %d\n", p->prioridade);
+    printf("    time: %d\n", p->tempo_de_processador);
+    printf("    printers: %d\n", p->impressora);
+    printf("    scanners: %d\n", p->scanner);
+    printf("    modems: %d\n", p->modem);
+    printf("    drives: %d\n", p->codigo_disco);
+}
+
+int ler_arquivo_disco(const char* nome_arquivo, Disco* disco, Kernel* krnl) {
+    FILE* arquivo = fopen(nome_arquivo, "r");
+    if (arquivo == NULL) {
+        perror("Erro ao abrir o arquivo de disco (files.txt)");
+        return 0;
     }
 
-    int counter = 0;     // 0 = quantidade blocos, 1 = n segmentos, 2 = arquivos, 3 = operações
-    int segmentos;
-    int o_idx = 0;
+    char linha[MAX_LINHA];
+    int num_segmentos = 0;
+    int operacoes_idx = 0;
 
-    while(fgets(linha, sizeof(linha), arquivo) != NULL){
-        char* valor;
-
-        switch(counter){
-            // Pega a primeira linha do arquivo, o número de blocos
-            case 0:
-                disco->total_blocos = atoi(strtok(linha, ", "));
-                counter++;
-                break;
-            
-            // Pega a segunda linha do arquivo, o número de n segmentos
-            case 1:
-                segmentos = atoi(strtok(linha, ", "));
-                counter++;
-                break;
-
-            // itera n vezes para pegar cada arquivo
-            case 2:
-                for (int i = 0; i < segmentos; i++) {
-                    Arquivo a; 
-
-                    if(fgets(linha, sizeof(linha), arquivo) != NULL){
-                        a.nome = strtok(linha, ", ");
-                        a.bloco_inicial = atoi(strtok(NULL, ", "));
-                        a.tamanho = atoi(strtok(NULL, ", "));
-                    } else {
-                        perror("Número de segmentos fornecido incompatível com a quantidade real de segmentos");
-                        break;
-                    }
-
-                    // Adiciona o arquivo no diretório
-                    disco->diretorio.arquivos[i] = a;
-                    disco->diretorio.total_arquivos++;
-
-                    // Atualiza o bitmap de blocos utilizados
-                    for (int i = 0; i < a.tamanho; i++) {
-                        disco->blocos[a.bloco_inicial + i] = a.nome;
-                    }
-                }
-
-                counter++;
-                break;
-
-            // itera até o fim do arquivo para pegar as operações
-            default:
-                Operacao o;
-                
-                o.pid = atoi(strtok(linha, ", "));
-                o.codigo_op = atoi(strtok(NULL, ", "));
-                o.nome_arquivo = strtok(NULL, ", ");
-
-                if(o.codigo_op == 0){
-                    o.blocos = atoi(strtok(NULL, ", "));
-                }
-
-                // Adiciona a operação no vetor de Operações do disco
-                kernel->operacoes[o_idx++] = o;
-
-                break;
-        }
+    // Linha 1: Total de blocos no disco
+    if (fgets(linha, sizeof(linha), arquivo)) {
+        disco->total_blocos = atoi(linha);
     }
 
-    fclose(arquivo); // fecha files.txt
-
-    // Abre o arquivo processes.txt para leitura
-    arquivo = fopen("processes.txt", "r");
-    if (arquivo == NULL){
-        perror("Erro ao abrir o arquivo");
-        return 1;
+    // Linha 2: Quantidade de segmentos ocupados
+    if (fgets(linha, sizeof(linha), arquivo)) {
+        num_segmentos = atoi(linha);
     }
 
+    // Linhas 3 a N+2: Leitura dos segmentos iniciais
+    for (int i = 0; i < num_segmentos; i++) {
+        if (fgets(linha, sizeof(linha), arquivo)) {
+            Arquivo a;
+            a.nome = strtok(linha, ", ")[0];
+            a.bloco_inicial = atoi(strtok(NULL, ", "));
+            a.tamanho = atoi(strtok(NULL, ", "));
+            a.pid_dono = -1; // Arquivos iniciais não têm dono
 
-    int p_idx = 0;     // variável de controle para contar os processos prontos
-    int p_id = 0;      // variável que armazena os IDs dos processos
+            disco->diretorio.arquivos[disco->diretorio.total_arquivos++] = a;
 
-    // Itera sobre cada linha do arquivo Processes
-    while(fgets(linha, sizeof(linha), arquivo) != NULL){
-        Processo p;
-
-        p.pid = p_id++; // atualiza o pid e incrementa p_id
-        p.tempo_inicializacao = atoi(strtok(linha, ", "));
-        p.prioridade = atoi(strtok(NULL, ", "));
-        p.tempo_de_processador = atoi(strtok(NULL, ", "));
-        p.blocos_mem = atoi(strtok(NULL, ", "));
-        p.impressora = atoi(strtok(NULL, ", "));
-        p.scanner = atoi(strtok(NULL, ", "));
-        p.modem = atoi(strtok(NULL, ", "));
-        p.codigo_disco = atoi(strtok(NULL, ", "));
-
-        // O sistema só deve oferecer suporte para 1000 processos nas filas
-        if(p_idx < 999){
-            // Chamar o Gerenciador de Memória para alocar o processo na RAM
-             int resultado_alocacao = kernel->alocador(&p, memoria);
-
-            if (resultado_alocacao != -1) {
-                imprimir_info_processo(&p);
-                despachar_processo(p);
-                p_idx++;
-            } else {
-                // Não é possível alocar o processo na memória pois já há 1000 processos prontos
-                // Adiciona o processo na Fila Global
-                append(filas[4], p);
+            for (int j = 0; j < a.tamanho; j++) {
+                disco->blocos[a.bloco_inicial + j] = a.nome;
             }
-        } else {
-            // Adiciona o processo na Fila Global
-            append(filas[4], p);
         }
     }
 
-    fclose(arquivo); // fecha processes.txt
+    // Resto do arquivo: Operações de arquivo a serem feitas pelos processos
+    while (fgets(linha, sizeof(linha), arquivo) != NULL) {
+        if (operacoes_idx >= TAM_OP) break;
+        Operacao o;
+        o.pid = atoi(strtok(linha, ", "));
+        o.codigo_op = atoi(strtok(NULL, ", "));
+        o.nome_arquivo = strtok(NULL, ", ")[0];
+
+        if (o.codigo_op == 0) { // Se for criação, pega o tamanho
+            o.blocos = atoi(strtok(NULL, ", "));
+        } else {
+            o.blocos = 0;
+        }
+        krnl->operacoes[operacoes_idx++] = o;
+    }
+    krnl->num_operacoes = operacoes_idx; // Agora este campo existe no kernel.h
+
+    fclose(arquivo);
+    return 1;
+}
+
+int ler_arquivo_processos(const char* nome_arquivo, Processo processos_pendentes[], int* total_processos) {
+    FILE* arquivo = fopen(nome_arquivo, "r");
+    if (arquivo == NULL) {
+        perror("Erro ao abrir o arquivo de processos");
+        return 0;
+    }
+
+    char linha[MAX_LINHA];
+    *total_processos = 0;
+
+    while (fgets(linha, sizeof(linha), arquivo) != NULL) {
+        if (*total_processos >= MAX_PROCESSOS_ARQUIVO) break;
+        Processo* p = &processos_pendentes[*total_processos];
+        
+        p->pid = *total_processos;
+        p->tempo_inicializacao = atoi(strtok(linha, ", "));
+        p->prioridade = atoi(strtok(NULL, ", "));
+        p->tempo_de_processador = atoi(strtok(NULL, ", "));
+        p->blocos_mem = atoi(strtok(NULL, ", "));
+        p->impressora = atoi(strtok(NULL, ", "));
+        p->scanner = atoi(strtok(NULL, ", "));
+        p->modem = atoi(strtok(NULL, ", "));
+        p->codigo_disco = atoi(strtok(NULL, ", "));
+        
+        (*total_processos)++;
+    }
+
+    fclose(arquivo);
+    return 1;
+}
+
+int sistema_esta_ativo(int processos_despachados, int total_processos_arquivo) {
+    if (processos_despachados < total_processos_arquivo) return 1;
+    if (!queue_empty(&fila_tempo_real) || !queue_empty(&fila_usuario_1) || !queue_empty(&fila_usuario_2) || !queue_empty(&fila_usuario_3)) return 1;
+    if (!queue_empty(&sem_impressora.processos_bloqueados) || !queue_empty(&sem_scanner.processos_bloqueados) || !queue_empty(&sem_modem.processos_bloqueados) || !queue_empty(&sem_disco_sata.processos_bloqueados)) return 1;
+    return 0;
+}
+
+void dispatcher(const char* arq_proc, const char* arq_files) {
+    Processo processos_pendentes[MAX_PROCESSOS_ARQUIVO];
+    int total_processos_no_arquivo;
+    int processos_ja_avaliados = 0;
+
+    // Usa as globais 'HD' e 'kernel' que agora estão visíveis via 'extern'
+    ler_arquivo_disco(arq_files, &HD, &kernel);
+    ler_arquivo_processos(arq_proc, processos_pendentes, &total_processos_no_arquivo);
+    
+    int tempo_atual = 0;
+    
+    while (sistema_esta_ativo(processos_ja_avaliados, total_processos_no_arquivo)) {
+        printf("\n--- TEMPO: %d ---\n", tempo_atual);
+
+        for (int i = 0; i < total_processos_no_arquivo; i++) {
+            if (processos_pendentes[i].tempo_inicializacao == tempo_atual) {
+                printf("dispatcher => Tentando despachar processo %d\n", processos_pendentes[i].pid);
+                processos_ja_avaliados++;
+
+                int offset = alocador(&processos_pendentes[i], &RAM);
+                if (offset != -1) {
+                    processos_pendentes[i].offset_mem = offset;
+                    
+                    // A alocação de recursos com semáforos é bloqueante,
+                    // mas em nossa simulação de thread única, assumimos que o dispatcher
+                    // irá esperar aqui se necessário.
+                    alocar_recursos(&processos_pendentes[i]);
+                    
+                    imprimir_info_processo(&processos_pendentes[i]);
+                    despachar_processo(processos_pendentes[i]);
+                } else {
+                    fprintf(stderr, "dispatcher => Falha: Processo %d nao pode ser alocado por falta de memoria.\n", processos_pendentes[i].pid);
+                }
+            }
+        }
+        
+        escalonar(); 
+        
+        tempo_atual++;
+        usleep(100000); // 0.1 segundo de pausa para legibilidade
+    }
 }

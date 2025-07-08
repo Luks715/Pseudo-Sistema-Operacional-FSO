@@ -1,80 +1,60 @@
 #include <stdio.h>
-#include "gerenciador_es.h" // CORREÇÃO: Inclui o cabeçalho do próprio módulo
+#include "gerenciador_es.h"
+#include "../include/semaforo.h"
 
-// Implementação da inicialização dos recursos
-void inicializar_recursos(RecursosDoSistema* recursos) {
-    for (int i = 0; i < 2; i++) {
-        recursos->impressoras[i].ocupado = 0;
-        recursos->impressoras[i].pid = -1;
-        recursos->discos[i].ocupado = 0;
-        recursos->discos[i].pid = -1;
-    }
-    recursos->scanner.ocupado = 0;
-    recursos->scanner.pid = -1;
-    recursos->modem.ocupado = 0;
-    recursos->modem.pid = -1;
-}
+// Declaração para que este módulo "enxergue" os semáforos globais definidos no main.c
+extern Semaforo sem_impressora;
+extern Semaforo sem_scanner;
+extern Semaforo sem_modem;
+extern Semaforo sem_disco_sata;
 
-// Implementação da alocação de recursos
-int alocar_recursos(Processo* p, RecursosDoSistema* recursos) {
+void alocar_recursos(Processo* p) {
+    // Processos de tempo real não alocam recursos de E/S
     if (p->prioridade == 0) {
-        return 1; // Sucesso imediato
+        return;
     }
 
-    // Verifica a disponibilidade de TODOS os recursos necessários ANTES de alocar qualquer um
-    if (p->impressora >= 0 && recursos->impressoras[p->impressora].ocupado) {
-        printf("dispatcher => Falha: Processo %d nao pode ser criado. Impressora %d ja esta em uso.\n", p->pid, p->impressora);
-        return 0;
-    }
-    if (p->scanner == 1 && recursos->scanner.ocupado) {
-        printf("dispatcher => Falha: Processo %d nao pode ser criado. Scanner ja esta em uso.\n", p->pid);
-        return 0;
-    }
-    if (p->modem == 1 && recursos->modem.ocupado) {
-        printf("dispatcher => Falha: Processo %d nao pode ser criado. Modem ja esta em uso.\n", p->pid);
-        return 0;
-    }
-    if (p->codigo_disco >= 0 && recursos->discos[p->codigo_disco].ocupado) {
-        printf("dispatcher => Falha: Processo %d nao pode ser criado. Disco SATA %d ja esta em uso.\n", p->pid, p->codigo_disco);
-        return 0;
-    }
+    printf("dispatcher => Processo %d requisitando recursos de E/S...\n", p->pid);
 
-    // Se todas as verificações passaram, aloca os recursos para o processo
     if (p->impressora >= 0) {
-        recursos->impressoras[p->impressora].ocupado = 1;
-        recursos->impressoras[p->impressora].pid = p->pid;
+        // Pede para usar uma das duas impressoras. Bloqueia se ambas estiverem em uso.
+        wait(&sem_impressora, p);
+        printf("dispatcher => Impressora alocada para o processo %d.\n", p->pid);
     }
     if (p->scanner == 1) {
-        recursos->scanner.ocupado = 1;
-        recursos->scanner.pid = p->pid;
+        // Pede para usar o scanner. Bloqueia se estiver em uso.
+        wait(&sem_scanner, p);
+        printf("dispatcher => Scanner alocado para o processo %d.\n", p->pid);
     }
     if (p->modem == 1) {
-        recursos->modem.ocupado = 1;
-        recursos->modem.pid = p->pid;
+        // Pede para usar o modem. Bloqueia se estiver em uso.
+        wait(&sem_modem, p);
+        printf("dispatcher => Modem alocado para o processo %d.\n", p->pid);
     }
     if (p->codigo_disco >= 0) {
-        recursos->discos[p->codigo_disco].ocupado = 1;
-        recursos->discos[p->codigo_disco].pid = p->pid;
+        // Pede para usar um dos dois discos. Bloqueia se ambos estiverem em uso.
+        wait(&sem_disco_sata, p);
+        printf("dispatcher => Disco SATA alocado para o processo %d.\n", p->pid);
     }
-    return 1; // Sucesso
 }
 
-// Implementação da liberação de recursos
-void liberar_recursos(Processo* p, RecursosDoSistema* recursos) {
-    if (p->impressora >= 0 && recursos->impressoras[p->impressora].pid == p->pid) {
-        recursos->impressoras[p->impressora].ocupado = 0;
-        recursos->impressoras[p->impressora].pid = -1;
+void liberar_recursos(Processo* p) {
+    if (p->prioridade == 0) {
+        return;
     }
-    if (p->scanner == 1 && recursos->scanner.pid == p->pid) {
-        recursos->scanner.ocupado = 0;
-        recursos->scanner.pid = -1;
+    
+    // Devolve os recursos que o processo estava usando
+    if (p->impressora >= 0) {
+        signal(&sem_impressora);
     }
-    if (p->modem == 1 && recursos->modem.pid == p->pid) {
-        recursos->modem.ocupado = 0;
-        recursos->modem.pid = -1;
+    if (p->scanner == 1) {
+        signal(&sem_scanner);
     }
-    if (p->codigo_disco >= 0 && recursos->discos[p->codigo_disco].pid == p->pid) {
-        recursos->discos[p->codigo_disco].ocupado = 0;
-        recursos->discos[p->codigo_disco].pid = -1;
+    if (p->modem == 1) {
+        signal(&sem_modem);
     }
+    if (p->codigo_disco >= 0) {
+        signal(&sem_disco_sata);
+    }
+    printf("dispatcher => Recursos do processo %d foram liberados.\n", p->pid);
 }

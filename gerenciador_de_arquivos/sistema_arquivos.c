@@ -5,7 +5,7 @@
 #include "../include/arquivo.h"
 #include "sistema_arquivos.h"
 
-int first_fit(int tamanho, Disco* disco) {
+int first_fit_disco(int tamanho, Disco* disco) {
     int blocos_livres = 0;
     int endereco_inicial = -1;
 
@@ -66,7 +66,7 @@ int sistema_arquivos(int operacao, const char* nome_arquivo, int tamanho_bloco, 
                 return -2;
             }
 
-            int endereco_disco = first_fit(tamanho_bloco, disco);
+            int endereco_disco = first_fit_disco(tamanho_bloco, disco);
 
             if (endereco_disco > -1) {
                 int index = disco->diretorio.total_arquivos;

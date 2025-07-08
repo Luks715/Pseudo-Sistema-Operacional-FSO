@@ -17,6 +17,7 @@
     "stdlib.h": "c",
     "stdio.h": "c",
     "unistd.h": "c",
-    "recursoes.h": "c"
+    "recursoes.h": "c",
+    "gerenciador_es.h": "c"
   }
 }

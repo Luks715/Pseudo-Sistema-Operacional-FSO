@@ -1,11 +1,6 @@
 #ifndef DISPATCHER_H
 #define DISPATCHER_H
 
-#include "memoria.h"
-#include "disco.h"
-#include "fila.h"
-#include "kernel.h"
+void dispatcher(const char* arq_proc, const char* arq_files);
 
-void dispatcher(Memoria* memoria, Disco* disco, Fila* filas[], Kernel* kernel);
-
-#endif
+#endif // DISPATCHER_H

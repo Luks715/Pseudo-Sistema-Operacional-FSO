@@ -2,6 +2,7 @@
 #define SEMAFORO_H
 
 #include "fila.h"
+#include "processo.h"
 
 typedef struct {
     int valor;
@@ -10,7 +11,7 @@ typedef struct {
 
 void iniciar_semaforo(Semaforo* s, int valor_inicial);
 
-void wait(Semaforo* s, Processo* p_atual, Fila* fila_prontos_origem);
+int wait(Semaforo* s, Processo* p_atual);
 
 void signal(Semaforo* s);
 

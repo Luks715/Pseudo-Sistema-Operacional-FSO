@@ -1,6 +1,7 @@
 #include <stdio.h>
+
 #include "gerenciador_processos.h"
-#include "fila.h"
+#include "../include/fila.h"
 
 extern Fila fila_tempo_real;
 extern Fila fila_usuario_1;
