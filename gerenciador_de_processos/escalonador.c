@@ -9,6 +9,7 @@
 #include "../include/recursoES.h"
 #include "../gerenciador_de_ES/gerenciador_es.h" 
 #include "../gerenciador_de_memoria/alocador.h"
+#include "../include/dispatcher.h"
 
 extern Memoria RAM;
 extern Fila fila_tempo_real;
@@ -51,6 +52,8 @@ void aging(Fila* fila, Fila* fila_superior) {
 
 
 void executar_processo(Processo* p) {
+    executar_operacoes_de_arquivo(p); 
+
     printf("Executando P%d (Prioridade: %d, Tempo Restante: %d)\n", p->pid, p->prioridade, p->tempo_de_processador);
     usleep(1000); 
     p->tempo_de_processador--;
@@ -105,6 +108,7 @@ void escalonar() {
             
             printf("Executando processo de TEMPO REAL P%d ate o fim.\n", p_atual.pid);
             while (p_atual.tempo_de_processador > 0) {
+                executar_operacoes_de_arquivo(&p_atual); // Executa operações de arquivo pendentes
                 usleep(1000); // Simula 1ms de trabalho
                 p_atual.tempo_de_processador--;
             }

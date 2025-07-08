@@ -14,6 +14,7 @@
 #include "include/disco.h"
 #include "include/operacao.h"
 #include "include/semaforo.h"
+#include "gerenciador_de_arquivos/sistema_arquivos.h"
 
 extern Memoria RAM;
 extern Disco HD;
@@ -36,7 +37,7 @@ void imprimir_info_processo(Processo* p) {
     printf("    printers: %d\n", p->impressora);
     printf("    scanners: %d\n", p->scanner);
     printf("    modems: %d\n", p->modem);
-    printf("    drives: %d\n", p->codigo_disco);
+    printf("    drives: %d\n\n", p->codigo_disco);
 }
 
 int ler_arquivo_disco(const char* nome_arquivo, Disco* disco, Kernel* krnl) {
@@ -176,5 +177,59 @@ void dispatcher(const char* arq_proc, const char* arq_files) {
         
         tempo_atual++;
         usleep(100000); // 0.1 segundo de pausa para legibilidade
+    }
+}
+
+
+// Esta função procura e executa a primeira operação de arquivo pendente para um dado processo.
+void executar_operacoes_de_arquivo(Processo* processo_atual) {
+    // Itera pela lista de operações que foi lida do files.txt
+    for (int i = 0; i < kernel.num_operacoes; i++) {
+        // Verifica se a operação pertence ao processo que está executando agora
+        if (kernel.operacoes[i].pid == processo_atual->pid) {
+            
+            Operacao* op = &kernel.operacoes[i];
+            printf("Sistema de Arquivos => Processo %d executando operacao...\n", processo_atual->pid);
+
+            // Chama a função do sistema de arquivos para realizar a operação
+            int resultado = sistema_arquivos(op->codigo_op, op->nome_arquivo, op->blocos, &HD, processo_atual);
+
+            // Imprime o resultado da operação com base no código de retorno
+            switch (resultado) {
+                case 1: // Sucesso na criação
+                    printf("Operacao %d => Sucesso\n", i);
+                    printf("O processo %d criou o arquivo %c.\n\n", processo_atual->pid, op->nome_arquivo);
+                    break;
+                case 2: // Sucesso na deleção
+                    printf("Operacao %d => Sucesso\n", i);
+                    printf("O processo %d deletou o arquivo %c.\n\n", processo_atual->pid, op->nome_arquivo);
+                    break;
+                case -1: // Falha por falta de espaço
+                    printf("Operacao %d => Falha\n", i);
+                    printf("O processo %d nao pode criar o arquivo %c (falta de espaco).\n\n", processo_atual->pid, op->nome_arquivo);
+                    break;
+                case -2: // Falha porque o arquivo já existe
+                    printf("Operacao %d => Falha\n", i);
+                    printf("O processo %d nao pode criar o arquivo %c (ja existe).\n\n", processo_atual->pid, op->nome_arquivo);
+                    break;
+                case -3: // Falha por falta de permissão
+                    printf("Operacao %d => Falha\n", i);
+                    printf("O processo %d nao pode deletar o arquivo %c (falta de permissao).\n\n", processo_atual->pid, op->nome_arquivo);
+                    break;
+                case -4: // Falha porque o arquivo não existe para ser deletado
+                    printf("Operacao %d => Falha\n", i);
+                    printf("O processo %d nao pode deletar o arquivo %c (nao existe).\n\n", processo_atual->pid, op->nome_arquivo);
+                    break;
+                default:
+                    printf("Operacao %d => Falha\n", i);
+                    printf("Ocorreu um erro desconhecido.\n\n");
+            }
+
+            // Marca a operação como concluída para não ser executada novamente
+            op->pid = -1;
+
+            // Para a busca, pois um processo geralmente faz uma operação de E/S por vez
+            return; 
+        }
     }
 }

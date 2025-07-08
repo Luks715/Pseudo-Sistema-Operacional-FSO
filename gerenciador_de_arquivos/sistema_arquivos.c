@@ -57,8 +57,8 @@ void remover_do_diretorio(Arquivo* arquivo, Disco* disco) {
 }
 
 
-int sistema_arquivos(int operacao, const char* nome_arquivo, int tamanho_bloco, Disco* disco, Processo* processo) {
-    Arquivo* arquivo_buscado = buscar_arquivo(*nome_arquivo, disco);
+int sistema_arquivos(int operacao, char nome_arquivo, int tamanho_bloco, Disco* disco, Processo* processo) {
+    Arquivo* arquivo_buscado = buscar_arquivo(nome_arquivo, disco);
 
     switch (operacao) {
         case 0: // Operação de CRIAR arquivo
@@ -71,7 +71,7 @@ int sistema_arquivos(int operacao, const char* nome_arquivo, int tamanho_bloco, 
             if (endereco_disco > -1) {
                 int index = disco->diretorio.total_arquivos;
                 if (index < MAX_ARQUIVOS) {
-                    disco->diretorio.arquivos[index].nome = *nome_arquivo;
+                    disco->diretorio.arquivos[index].nome = nome_arquivo;
                     disco->diretorio.arquivos[index].pid_dono = processo->pid;
                     disco->diretorio.arquivos[index].bloco_inicial = endereco_disco;
                     disco->diretorio.arquivos[index].tamanho = tamanho_bloco;
@@ -79,7 +79,7 @@ int sistema_arquivos(int operacao, const char* nome_arquivo, int tamanho_bloco, 
 
                     // Preenche os blocos no disco
                     for (int i = 0; i < tamanho_bloco; i++) {
-                        disco->blocos[endereco_disco + i] = *nome_arquivo;
+                        disco->blocos[endereco_disco + i] = nome_arquivo;
                     }
                     return 1; 
                 } else {
