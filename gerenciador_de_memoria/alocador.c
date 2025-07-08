@@ -114,3 +114,19 @@ int first_fit_memoria(int bloco_inicial, int bloco_final, int tamanho_processo, 
     // sequência de blocos livres grande o suficiente para abrigar todo o processo. Fragmentação
     return -1;
 }
+
+void liberar_memoria(Processo* p, Memoria* m) {
+    if (p->offset_mem < 0) { // Garante que o processo tinha memória alocada
+        return;
+    }
+
+    printf("dispatcher => Liberando %d blocos de memoria para o processo %d (offset: %d)\n", p->blocos_mem, p->pid, p->offset_mem);
+
+    for (int i = 0; i < p->blocos_mem; i++) {
+        int index = p->offset_mem + i;
+        if (index < TOTAL_BLOCOS) { // Checagem de segurança
+            m->blocos[index].ocupado = 0;
+            m->blocos[index].pid = -1;
+        }
+    }
+}

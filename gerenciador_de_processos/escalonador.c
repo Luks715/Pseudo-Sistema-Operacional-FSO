@@ -8,8 +8,9 @@
 #include "../include/semaforo.h"      
 #include "../include/recursoES.h"
 #include "../gerenciador_de_ES/gerenciador_es.h" 
+#include "../gerenciador_de_memoria/alocador.h"
 
-
+extern Memoria RAM;
 extern Fila fila_tempo_real;
 extern Fila fila_usuario_1;
 extern Fila fila_usuario_2;
@@ -58,6 +59,7 @@ void executar_processo(Processo* p) {
         printf("P%d finalizado. return SIGINT\n", p->pid);
         
         liberar_recursos(p);
+        liberar_memoria(p, &RAM);
     }
 }
 void rebaixar_processo(Processo* p) {
@@ -109,6 +111,7 @@ void escalonar() {
             printf("P%d finalizado. return SIGINT\n", p_atual.pid);
             
             liberar_recursos(&p_atual);
+            liberar_memoria(&p_atual, &RAM);
             continue; // Volta ao início do loop para re-avaliar as filas
         }
 

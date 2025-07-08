@@ -5,5 +5,6 @@
 #include "../include/processo.h"
 
 int alocador(Processo* p, Memoria* m);
+void liberar_memoria(Processo* p, Memoria* m);
 
 #endif
