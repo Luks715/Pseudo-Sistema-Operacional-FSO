@@ -39,19 +39,19 @@ Arquivo* buscar_arquivo(const char nome_arquivo, Disco* disco) {
 
 
 void remover_do_diretorio(Arquivo* arquivo, Disco* disco) {
-    int encontrado = 0;
+    int index_para_remover = -1;
+    // Encontra o índice do arquivo que queremos remover
     for (int i = 0; i < disco->diretorio.total_arquivos; i++) {
-        // Encontra o arquivo a ser removido
         if (&(disco->diretorio.arquivos[i]) == arquivo) {
-            encontrado = 1;
-        }
-        // Se o arquivo já foi encontrado, desloca os próximos elementos para a esquerda
-        if (encontrado && i < disco->diretorio.total_arquivos - 1) {
-            disco->diretorio.arquivos[i] = disco->diretorio.arquivos[i + 1];
+            index_para_remover = i;
+            break;
         }
     }
 
-    if (encontrado) {
+    if (index_para_remover != -1) {
+        // Move o último arquivo da lista para a posição do arquivo removido
+        disco->diretorio.arquivos[index_para_remover] = disco->diretorio.arquivos[disco->diretorio.total_arquivos - 1];
+        // Diminui o contador total de arquivos
         disco->diretorio.total_arquivos--;
     }
 }

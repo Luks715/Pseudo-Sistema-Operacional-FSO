@@ -194,11 +194,17 @@ void executar_operacoes_de_arquivo(Processo* processo_atual) {
             // Chama a função do sistema de arquivos para realizar a operação
             int resultado = sistema_arquivos(op->codigo_op, op->nome_arquivo, op->blocos, &HD, processo_atual);
 
+            int offset_criacao = -1;
+            if (resultado > 0 && op->codigo_op == 0) {
+                 Arquivo* arq_criado = buscar_arquivo(op->nome_arquivo, &HD);
+                 if (arq_criado) offset_criacao = arq_criado->bloco_inicial;
+            }
+
             // Imprime o resultado da operação com base no código de retorno
             switch (resultado) {
                 case 1: // Sucesso na criação
                     printf("Operacao %d => Sucesso\n", i);
-                    printf("O processo %d criou o arquivo %c.\n\n", processo_atual->pid, op->nome_arquivo);
+                    printf("O processo %d criou o arquivo %c (blocos %d a %d).\n\n", processo_atual->pid, op->nome_arquivo, offset_criacao, offset_criacao + op->blocos - 1);
                     break;
                 case 2: // Sucesso na deleção
                     printf("Operacao %d => Sucesso\n", i);
@@ -222,7 +228,7 @@ void executar_operacoes_de_arquivo(Processo* processo_atual) {
                     break;
                 default:
                     printf("Operacao %d => Falha\n", i);
-                    printf("Ocorreu um erro desconhecido.\n\n");
+                    printf("Ocorreu um erro desconhecido (%d).\n\n", resultado);
             }
 
             // Marca a operação como concluída para não ser executada novamente
