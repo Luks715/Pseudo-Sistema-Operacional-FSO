@@ -25,7 +25,7 @@ int alocador(Processo* p, Memoria* m){
 
     if(resultado_alocacao != -1) {
         // Altera os blocos na memória onde o processo está alocado para 1
-        for(int i = 0; i <= tamanho_processo; i++){
+        for(int i = 0; i < tamanho_processo; i++){
             m->blocos[resultado_alocacao + i].ocupado = 1;
             m->blocos[resultado_alocacao + i].pid = p->pid;
         }
@@ -103,7 +103,7 @@ int first_fit(int bloco_inicial, int bloco_final, int tamanho_processo, Memoria*
             blocos_livres = 0;
         }
 
-        if(blocos_livres == tamanho_processo){
+        if(blocos_livres >= tamanho_processo){
             return inicio_segmento;
         }
     }

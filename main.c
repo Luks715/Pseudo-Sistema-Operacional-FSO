@@ -104,7 +104,7 @@ int main(){
 
     inicializar_kernel();
     inicializar_filas();
-    inicializar_gerenciador();
+    //inicializar_gerenciador();
     inicializar_memoria();
     inicializar_disco();
     inicializar_recursos();

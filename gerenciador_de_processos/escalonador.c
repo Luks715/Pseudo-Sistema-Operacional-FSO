@@ -14,7 +14,7 @@ extern Fila fila_usuario_3;
 #define AGING_THRESHOLD 5 
 
 void aging(Fila* fila, Fila* fila_superior) {
-    if (is_empty(fila)) {
+    if (queue_empty(fila)) {
         return;
     }
 
@@ -22,7 +22,7 @@ void aging(Fila* fila, Fila* fila_superior) {
     start_queue(&fila_temp); // Fila temporária para guardar processos não promovidos
 
     // Itera sobre a fila original, esvaziando-a
-    while (!is_empty(fila)) {
+    while (!queue_empty(fila)) {
         Processo p;
         pop(fila, &p); // Retira o processo da fila original
 
@@ -72,17 +72,30 @@ void rebaixar_processo(Processo* p) {
     }
 }
 
+static int processar_fila_usuario(Fila* fila, Processo* p_atual) {
+    if (!queue_empty(fila)) { 
+        pop(fila, p_atual);
+        executar_processo(p_atual);
+        if (p_atual->tempo_de_processador > 0) {
+            rebaixar_processo(p_atual);
+        }
+        return 1; // Indica que um processo foi tratado
+    }
+    return 0; // Indica que a fila estava vazia
+}
+
+
 void escalonar() {
     // O loop continua enquanto houver processos em qualquer fila de prontos.
-    while (!is_empty(&fila_tempo_real) ||
-           !is_empty(&fila_usuario_1) ||
-           !is_empty(&fila_usuario_2) ||
-           !is_empty(&fila_usuario_3)) {
+    while (!queue_empty(&fila_tempo_real) ||
+           !queue_empty(&fila_usuario_1) ||
+           !queue_empty(&fila_usuario_2) ||
+           !queue_empty(&fila_usuario_3)) {
         
         Processo p_atual;
 
         // 1. Processos de Tempo Real (maior prioridade)
-        if (!is_empty(&fila_tempo_real)) {
+        if (!queue_empty(&fila_tempo_real)) {
             pop(&fila_tempo_real, &p_atual);
             
             printf("Executando processo de TEMPO REAL P%d até o fim.\n", p_atual.pid);
@@ -101,33 +114,13 @@ void escalonar() {
         aging(&fila_usuario_2, &fila_usuario_1);
         aging(&fila_usuario_3, &fila_usuario_2);
 
-        // Fila de Prioridade 1
-        if (!is_empty(&fila_usuario_1)) {
-            pop(&fila_usuario_1, &p_atual);
-            executar_processo(&p_atual);
-            if (p_atual.tempo_de_processador > 0) {
-                rebaixar_processo(&p_atual);
-            }
+        if (processar_fila_usuario(&fila_usuario_1, &p_atual)) {
             continue;
         }
-
-        // Fila de Prioridade 2
-        if (!is_empty(&fila_usuario_2)) {
-            pop(&fila_usuario_2, &p_atual);
-            executar_processo(&p_atual);
-            if (p_atual.tempo_de_processador > 0) {
-                rebaixar_processo(&p_atual);
-            }
+        if (processar_fila_usuario(&fila_usuario_2, &p_atual)) {
             continue;
         }
-
-        // Fila de Prioridade 3
-        if (!is_empty(&fila_usuario_3)) {
-            pop(&fila_usuario_3, &p_atual);
-            executar_processo(&p_atual);
-            if (p_atual.tempo_de_processador > 0) {
-                rebaixar_processo(&p_atual);
-            }
+        if (processar_fila_usuario(&fila_usuario_3, &p_atual)) {
             continue;
         }
     }
