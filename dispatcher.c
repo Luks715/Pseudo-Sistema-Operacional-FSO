@@ -1,7 +1,10 @@
+#define _XOPEN_SOURCE   600
+#define _POSIX_C_SOURCE 200112L
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h> 
+#include <unistd.h>
 
 #include "include/dispatcher.h"
 #include "include/processo.h"
@@ -69,6 +72,7 @@ int ler_arquivo_disco(const char* nome_arquivo, Disco* disco, Kernel* krnl) {
             a.bloco_inicial = atoi(strtok(NULL, ", "));
             a.tamanho = atoi(strtok(NULL, ", "));
             a.pid_dono = -1; // Arquivos iniciais não têm dono
+            a.slot_valido = 1; // indica que o slot no vetor
 
             disco->diretorio.arquivos[disco->diretorio.total_arquivos++] = a;
 
@@ -196,8 +200,9 @@ void executar_operacoes_de_arquivo(Processo* processo_atual) {
 
             int offset_criacao = -1;
             if (resultado > 0 && op->codigo_op == 0) {
-                 Arquivo* arq_criado = buscar_arquivo(op->nome_arquivo, &HD);
-                 if (arq_criado) offset_criacao = arq_criado->bloco_inicial;
+                int dummy_index = -1;   // O index não é necessário para a função dispatcher
+                Arquivo* arq_criado = buscar_arquivo(op->nome_arquivo, &HD, &dummy_index);
+                if (arq_criado) offset_criacao = arq_criado->bloco_inicial;
             }
 
             // Imprime o resultado da operação com base no código de retorno
