@@ -2,14 +2,11 @@
 #include "../include/semaforo.h"
 #include "../gerenciador_de_processos/gerenciador_processos.h" 
 
-// As filas 'extern' não são necessárias aqui, pois o 'despachar_processo' já sabe onde colocar os processos.
-
 void iniciar_semaforo(Semaforo* s, int valor_inicial) {
     s->valor = valor_inicial;
     start_queue(&(s->processos_bloqueados));
 }
 
-// CORREÇÃO: A função agora retorna um status
 int wait(Semaforo* s, Processo* p_atual) {
     s->valor--;
     if (s->valor < 0) {
@@ -18,6 +15,7 @@ int wait(Semaforo* s, Processo* p_atual) {
         append(&(s->processos_bloqueados), *p_atual);
         return 0; // Sinaliza que o processo foi bloqueado
     }
+    
     // Recurso disponível e adquirido com sucesso.
     return 1; // Sinaliza sucesso
 }
@@ -34,7 +32,6 @@ void signal(Semaforo* s) {
 
             printf("dispatcher => Processo %d ACORDADO e devolvido para a fila de prontos.\n", processo_acordado.pid);
 
-            // Usa a função de despacho para colocar o processo na fila de prontos correta.
             despachar_processo(processo_acordado);
         }
     }

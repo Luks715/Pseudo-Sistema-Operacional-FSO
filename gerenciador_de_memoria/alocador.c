@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+// --- Inclusão dos Módulos do Sistema ---
 #include "../include/processo.h"
 #include "../include/memoria.h"
 #include "alocador.h"
@@ -52,7 +53,6 @@ int best_fit(int bloco_inicial, int bloco_final, int tamanho_processo, Memoria* 
         }
     }
 
-    // Retorna o resultado final
     return (inicio_melhor_segmento != -1) ? inicio_melhor_segmento : -1;
 }
 
@@ -63,7 +63,7 @@ int alocador(Processo* p, Memoria* m){
     int bloco_final;
     int tamanho_processo = p->blocos_mem;
 
-    // Com base na prioridade do Processo, define o range de onde ele pode ser armazenado na memória
+    // Com base na prioridade do Processo, define o intervalo de onde ele pode ser armazenado na memória
     if(p->prioridade == 0){ 
         bloco_inicial = 0;
         bloco_final = 63;
@@ -110,8 +110,6 @@ int first_fit_memoria(int bloco_inicial, int bloco_final, int tamanho_processo, 
         }
     }
 
-    // Se todo o loop for percorrido sem achar uma sequência de blocos, significa que não existe 
-    // sequência de blocos livres grande o suficiente para abrigar todo o processo. Fragmentação
     return -1;
 }
 

@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h> 
 
+// --- Inclusão dos Módulos do Sistema ---
 #include "../include/arquivo.h"
 #include "sistema_arquivos.h"
 
@@ -39,7 +40,6 @@ Arquivo* buscar_arquivo(const char nome_arquivo, Disco* disco, int* index_arquiv
             }
 
             if (arquivos_vistos == disco->diretorio.total_arquivos) {
-                // Já verificou todos os arquivos válidos, pode parar
                 return NULL;
             }
         }

@@ -2,6 +2,7 @@
 #include <unistd.h>
 //#include <time.h>
 
+// --- Inclusão dos Módulos do Sistema ---
 #include "escalonador.h"
 #include "../include/fila.h"
 #include "../include/processo.h"
@@ -11,6 +12,7 @@
 #include "../gerenciador_de_memoria/alocador.h"
 #include "../include/dispatcher.h"
 
+// --- Definição das Variáveis Globais do Sistema ---
 extern Memoria RAM;
 extern Fila fila_tempo_real;
 extern Fila fila_usuario_1;
@@ -18,6 +20,7 @@ extern Fila fila_usuario_2;
 extern Fila fila_usuario_3;
 
 #define AGING_THRESHOLD 5 
+
 
 void aging(Fila* fila, Fila* fila_superior) {
     if (queue_empty(fila)) {
@@ -108,8 +111,8 @@ void escalonar() {
             
             printf("Executando processo de TEMPO REAL P%d ate o fim.\n", p_atual.pid);
             while (p_atual.tempo_de_processador > 0) {
-                executar_operacoes_de_arquivo(&p_atual); // Executa operações de arquivo pendentes
-                usleep(1000); // Simula 1ms de trabalho
+                executar_operacoes_de_arquivo(&p_atual); 
+                usleep(1000);
                 p_atual.tempo_de_processador--;
             }
             printf("P%d finalizado. return SIGINT\n", p_atual.pid);

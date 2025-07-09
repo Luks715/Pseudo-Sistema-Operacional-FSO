@@ -2,7 +2,7 @@
 #include "gerenciador_es.h"
 #include "../include/semaforo.h"
 
-// Declaração para que este módulo "enxergue" os semáforos globais definidos no main.c
+// --- Inclusão dos Módulos do Sistema ---
 extern Semaforo sem_impressora;
 extern Semaforo sem_scanner;
 extern Semaforo sem_modem;

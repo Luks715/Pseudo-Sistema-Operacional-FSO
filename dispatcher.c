@@ -6,6 +6,7 @@
 #include <string.h>
 #include <unistd.h>
 
+// --- Inclusão dos Módulos do Sistema ---
 #include "include/dispatcher.h"
 #include "include/processo.h"
 #include "include/fila.h"
@@ -19,17 +20,18 @@
 #include "include/semaforo.h"
 #include "gerenciador_de_arquivos/sistema_arquivos.h"
 
+// --- Definição das Variáveis Globais do Sistema ---
 extern Memoria RAM;
 extern Disco HD;
 extern Kernel kernel;
 extern Fila fila_global, fila_tempo_real, fila_usuario_1, fila_usuario_2, fila_usuario_3;
 extern Semaforo sem_impressora, sem_scanner, sem_modem, sem_disco_sata;
 
+// --- Definições de Constantes ---
 #define MAX_PROCESSOS_ARQUIVO 1000
 #define MAX_LINHA 256
 
 // --- Funções Auxiliares ---
-
 void imprimir_info_processo(Processo* p) {
     printf("dispatcher =>\n");
     printf("    PID: %d\n", p->pid);
@@ -146,7 +148,6 @@ void dispatcher(const char* arq_proc, const char* arq_files) {
     int total_processos_no_arquivo;
     int processos_ja_avaliados = 0;
 
-    // Usa as globais 'HD' e 'kernel' que agora estão visíveis via 'extern'
     ler_arquivo_disco(arq_files, &HD, &kernel);
     ler_arquivo_processos(arq_proc, processos_pendentes, &total_processos_no_arquivo);
     
@@ -180,7 +181,7 @@ void dispatcher(const char* arq_proc, const char* arq_files) {
         escalonar(); 
         
         tempo_atual++;
-        usleep(100000); // 0.1 segundo de pausa para legibilidade
+        usleep(100000);
     }
 }
 

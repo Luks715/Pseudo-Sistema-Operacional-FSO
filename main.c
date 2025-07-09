@@ -39,9 +39,8 @@ Semaforo sem_disco_sata;
 // --- Funções de Inicialização ---
 
 void inicializar_kernel(){
-    // A implementação desta função deve ser atualizada para a struct Kernel final
     kernel.alocador = alocador;
-    // kernel.sistema_arquivos = sistema_arquivos; // A forma de chamar mudou
+    // kernel.sistema_arquivos = sistema_arquivos;
 }
 
 void inicializar_filas() {

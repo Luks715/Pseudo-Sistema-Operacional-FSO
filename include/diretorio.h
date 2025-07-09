@@ -7,7 +7,7 @@
 
 typedef struct {
     Arquivo arquivos[MAX_ARQUIVOS]; // Lista de arquivos
-    int total_arquivos;             // Quantos arquivos foram criados
+    int total_arquivos;           
 } Diretorio;
 
 #endif
