@@ -1,8 +1,10 @@
 #include <stdio.h>
+
+// --- Inclusão dos Módulos do Sistema ---
 #include "gerenciador_es.h"
 #include "../include/semaforo.h"
 
-// --- Inclusão dos Módulos do Sistema ---
+// --- Definição das Variáveis Globais do Sistema ---
 extern Semaforo sem_impressora;
 extern Semaforo sem_scanner;
 extern Semaforo sem_modem;
