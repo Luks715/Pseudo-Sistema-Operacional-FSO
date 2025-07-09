@@ -6,6 +6,7 @@ typedef struct {
     int pid_dono;
     int bloco_inicial;
     int tamanho;
+    int slot_valido; // utilizado para verificar se a posição na struct diretório está ocupada ou não
 } Arquivo;
 
 #endif
