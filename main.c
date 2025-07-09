@@ -60,10 +60,28 @@ void inicializar_memoria() {
 }
 
 void inicializar_disco() {
-    HD.diretorio.total_arquivos = 0;
     for (int i = 0; i < TAM_DISCO; i++) {
         HD.blocos[i] = '0';
     }
+
+    // Inicializa o diretório de arquivos
+    for (int i = 0; i < MAX_ARQUIVOS; i++) {
+        HD.diretorio.arquivos[i].slot_valido = 0;
+        HD.diretorio.arquivos[i].nome = '0';       // Ou outro valor padrão
+        HD.diretorio.arquivos[i].pid_dono = -1;  // Valor inválido
+        HD.diretorio.arquivos[i].bloco_inicial = -1;
+        HD.diretorio.arquivos[i].tamanho = 0;
+    }
+    
+    HD.diretorio.total_arquivos = 0;
+}
+
+void imprimir_mapa_disco(Disco* disco) {
+    printf("\nEstado do disco: ");
+    for (int i = 0; i < disco->total_blocos; i++) {
+        printf("%c", disco->blocos[i]);
+    }
+    printf("\n");
 }
 
 
@@ -96,10 +114,10 @@ int main(int argc, char *argv[]){
     // Passa os nomes dos arquivos para o dispatcher ler
     dispatcher(argv[1], argv[2]);
 
+    // Chama a função que imprime o estado final do disco
+    imprimir_mapa_disco(&HD);
+
     printf("\nSimulacao concluida. O sistema sera encerrado.\n");
-    
-    // (Opcional) Aqui poderia ter uma função para imprimir o estado final do disco
-    // imprimir_mapa_disco(&HD);
 
     return 0;
 }
